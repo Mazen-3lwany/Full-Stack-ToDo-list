@@ -1,12 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  // output   = "../src/generated/prisma"
+  output   = "/app/generated/prisma-client"
 }
 
 datasource db {
@@ -17,17 +11,17 @@ datasource db {
 model User {
   id       String  @id @default(uuid())
   name     String
-  email    String @unique
+  email    String  @unique
   password String
   profImag String?
   tasks    Task[]
 }
 
 model Task {
-  id          String @id @default(uuid())
+  id          String  @id @default(uuid())
   title       String
   description String?
-  user        User   @relation(fields: [userId], references: [id])
   userId      String
   isDone      Boolean @default(false)
+  user        User    @relation(fields: [userId], references: [id])
 }
