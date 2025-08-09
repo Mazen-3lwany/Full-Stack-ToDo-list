@@ -48,7 +48,7 @@ export default function Home() {
     },[])
     const handleDelete=async(taskId:string)=>{
       await DeleteTask(taskId)
-      const updatedTasks = await showTasks(userId as string); // استدعاء جديد للمهام
+      const updatedTasks = await showTasks(userId as string); 
         setTasks(updatedTasks);
     }
     // const handleUpdate=async(taskId:string)=>{
