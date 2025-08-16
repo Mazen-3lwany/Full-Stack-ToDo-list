@@ -1,12 +1,18 @@
 'use client'
-
+import { useSession } from "next-auth/react";
 import { createTask } from "./action";
 import { redirect } from "next/navigation";
 
 export default function Dashbord(){
+    const { data: session ,status} = useSession();
+    if (status === "loading") {
+        return <p>Loading...</p>;
+    }
+    if(!session) return null;
+    
     async function handleAddTask(e:React.FormEvent<HTMLFormElement>){
             e.preventDefault()
-            const userId=localStorage.getItem('currentUserId')
+            const userId=session?.user.id;
             const taskData=new FormData(e.currentTarget)
             if (userId) {
                     taskData.append('userId', userId);
@@ -52,14 +58,30 @@ export default function Dashbord(){
       </div>
 
       {/* Submit Button */}
+      <div className="flex  justify-center gap-x-10">
+        {/* d */}
+      <div className="text-center">
+          <button
+            type="button"
+            onClick={()=>{redirect('/')}}
+            className="bg-red-700 hover:bg-red-800 text-white font-semibold 
+            px-6 py-2 rounded-lg transition duration-200 shadow-md cursor-pointer"
+          >
+          Cancle
+          </button>
+        
+        </div>
       <div className="text-center">
         <button
           type="submit"
-          className="bg-cyan-700 hover:bg-cyan-800 text-white font-semibold px-6 py-2 rounded-lg transition duration-200 shadow-md"
+          className="bg-cyan-700 hover:bg-cyan-800 text-white font-semibold 
+          px-6 py-2 rounded-lg transition duration-200 shadow-md cursor-pointer"
         >
           ➕ Add Task
         </button>
         
+      </div>
+      
       </div>
     </form>
   </div>

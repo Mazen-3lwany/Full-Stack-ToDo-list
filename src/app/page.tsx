@@ -1,56 +1,52 @@
 'use client';
-
-import { redirect, useRouter } from 'next/navigation';
+import { useSession } from "next-auth/react";
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from "react";
 import { showTasks } from './actions/findTask';
 import Link from 'next/link';
 import { DeleteTask } from './actions/deleteTask';
 import Image from 'next/image';
+import SignOutComponent from './component/signout';
+
+
 
 export default function Home() {
-
-  type Task = {
-  id: string;
-  title: string;
-  description: string|null; 
-  userId:string;
-  isDone:boolean;
-};
+    type Task = {
+      id: string;
+      title: string;
+      description: string|null; 
+      userId:string;
+      isDone:boolean;
+    };
   
     const router =useRouter();
     const [userId, setUserId] = useState<string | null>(null);
     const [username,setusername]=useState<string|null>(null)
-    const [profUrl,setProfUrl]=useState<string|null>(null)
     const [tasks, setTasks] = useState<Task[]>([]);
-    
+    const { data: session, status } = useSession();
+    // Assuming session.user?.name is a JSON string
     useEffect(()=>{
-      const storeuserId=localStorage.getItem('currentUserId')
-        const userData=localStorage.getItem(`${storeuserId}`)
-      if(!userData){
-        router.push('/login')
-      }
-      else{
-        const user=JSON.parse(userData)
-        setusername(user.name||'user')
-          setUserId(storeuserId);
-          setProfUrl(user.profImag)
-          console.log(profUrl)
-
-        
-      async function showtasks(){
-          const tasks =await showTasks(storeuserId as string) 
-          console.log(tasks);
-          setTasks(tasks)
-    }
-    showtasks()
-    
-  }
-    },[])
-    const handleDelete=async(taskId:string)=>{
+          if (status === "unauthenticated") {
+            router.push("/auth/login");
+          }
+          const userData = session?.user;
+          if (!userData)return
+          setusername(userData.name||'user')
+          setUserId(userData.id || null);
+          
+          async function showtasks(){
+            const tasks =await showTasks(userData?.id as string);  
+            // console.log(tasks);
+            setTasks(tasks)
+        }
+        showtasks()
+    },[status, session, userId, router]);
+  
+  const handleDelete=async(taskId:string)=>{
       await DeleteTask(taskId)
       const updatedTasks = await showTasks(userId as string); 
-        setTasks(updatedTasks);
-    }
+      setTasks(updatedTasks);
+  }
     // const handleUpdate=async(taskId:string)=>{
 
     // }
@@ -60,12 +56,14 @@ export default function Home() {
     );
     setTasks(updatedTasks);
     }
-    const handlelogOut=()=>{
-      localStorage.removeItem('currentUserId')
-      redirect('/login')
+    
+    
+    // if (!username) return null;
+    if (status === "loading") {
+      return <p>Loading...</p>;
     }
     
-    if (!username) return null;
+  
   return (
       <div>
         <nav className="bg-cyan-900 text-white px-6 py-4 shadow">
@@ -74,7 +72,7 @@ export default function Home() {
           <div className='flex gap-x-5 items-center'>
             <div className=''>
                 <Image 
-                src={profUrl||'/profile-user.png'}
+                src={session?.user.image||'/profile-user.png'}
                 alt='profile image'
                 width={40} 
                 height={40}
@@ -85,12 +83,7 @@ export default function Home() {
           <div className="mt-2 sm:mt-0 text-md">
             Welcome, <span className="font-semibold uppercase">{username}</span> 👋
           </div>
-          <button
-          onClick={()=>handlelogOut()}
-          className="bg-red-600 hover:bg-red-700 text-white 
-              font-medium py-1 px-4 rounded-lg shadow-md transition duration-200">
-                Log out
-          </button>
+              <SignOutComponent />
           </div>
         </div>
       </nav>
@@ -110,7 +103,8 @@ export default function Home() {
             <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
               {task.title}
               {task.isDone ? (
-                <span className="text-green-600 text-sm bg-green-100 px-2 py-0.5 rounded-full">
+                <span className="text-green-600 text-sm bg-green-100 px-2 py-0.5 
+                rounded-full cursor-pointer">
                   ✅ Done
                 </span>
               ) : (
@@ -134,14 +128,16 @@ export default function Home() {
             <Link href={`/update/${task.id}`}>
               <button
                 // onClick={() => handleUpdate(task.id)}
-                className="text-sm px-3 py-1 rounded-md bg-blue-100 text-blue-800 hover:bg-blue-200 transition"
+                className="text-sm px-3 py-1 rounded-md bg-blue-100 text-blue-800
+                  hover:bg-blue-200 transition cursor-pointer"
               >
                 ✏️ Update
               </button>
             </Link>
             <button
               onClick={() => handleDelete(task.id)}
-              className="text-sm px-3 py-1 rounded-md bg-red-100 text-red-800 hover:bg-red-200 transition"
+              className="text-sm px-3 py-1 rounded-md bg-red-100 text-red-800
+                hover:bg-red-200 transition cursor-pointer"
             >
               🗑️ Delete
             </button>
@@ -153,7 +149,9 @@ export default function Home() {
 </div>
     <div className="flex justify-center mt-8">
       <Link href="/dashbord">
-        <button className="bg-cyan-800 hover:bg-cyan-700 text-white font-semibold py-2 px-6 rounded-full shadow-md transition duration-300 ease-in-out">
+        <button className="bg-cyan-800 hover:bg-cyan-700 text-white font-semibold 
+          py-2 px-6 rounded-full shadow-md transition duration-300 
+          ease-in-out cursor-pointer">
           ➕ Add New Task
         </button>
       </Link>
