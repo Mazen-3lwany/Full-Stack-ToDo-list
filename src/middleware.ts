@@ -50,7 +50,7 @@
 // middleware.ts
 
 import { withAuth } from "next-auth/middleware";
-import { DEFAULT_LOGIN_REDIRECT, apiAuthPrefix, authRoutes, publicRoutes } from "./route";
+import {  apiAuthPrefix, authRoutes, publicRoutes } from "./route";
 
 export default withAuth({
     pages: {
